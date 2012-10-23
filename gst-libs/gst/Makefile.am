@@ -1,5 +1,5 @@
 
-SUBDIRS = gl
+SUBDIRS = gl interfaces
 
 noinst_HEADERS = \
 	gettext.h \
