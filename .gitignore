@@ -30,8 +30,11 @@ gst*.pc
 *~
 *.o
 *.so
+*.slo
 *.lo
+*.lai
 *.la
+*.a
 *.spec
 *.stamp
 .libs
