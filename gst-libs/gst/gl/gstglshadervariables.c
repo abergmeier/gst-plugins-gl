@@ -18,6 +18,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstglshadervariables.h"
 
 #if !defined(strtok_r) && defined(G_OS_WIN32)
