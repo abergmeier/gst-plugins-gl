@@ -45,8 +45,8 @@ enum
 struct _GstGLWindowPrivate
 {
   /* X is not thread safe */
-  GMutex *x_lock;
-  GCond *cond_send_message;
+  GMutex x_lock;
+  GCond cond_send_message;
   gboolean running;
   gboolean visible;
   gboolean allow_extra_expose_events;
@@ -104,7 +104,7 @@ gst_gl_window_finalize (GObject * object)
   XEvent event;
   Bool ret = TRUE;
 
-  g_mutex_lock (priv->x_lock);
+  g_mutex_lock (&priv->x_lock);
 
   priv->parent = 0;
   if (priv->device) {
@@ -144,17 +144,11 @@ gst_gl_window_finalize (GObject * object)
     g_debug ("display sender closed\n");
   }
 
-  if (priv->cond_send_message) {
-    g_cond_free (priv->cond_send_message);
-    priv->cond_send_message = NULL;
-  }
+  g_cond_clear (&priv->cond_send_message);
 
-  g_mutex_unlock (priv->x_lock);
+  g_mutex_unlock (&priv->x_lock);
 
-  if (priv->x_lock) {
-    g_mutex_free (priv->x_lock);
-    priv->x_lock = NULL;
-  }
+  g_mutex_clear (&priv->x_lock);
 
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 }
@@ -273,14 +267,14 @@ gst_gl_window_new (gulong external_gl_context)
 
   setlocale (LC_NUMERIC, "C");
 
-  priv->x_lock = g_mutex_new ();
-  priv->cond_send_message = g_cond_new ();
+  g_mutex_init (&priv->x_lock);
+  g_cond_init (&priv->cond_send_message);
   priv->running = TRUE;
   priv->visible = FALSE;
   priv->parent = 0;
   priv->allow_extra_expose_events = TRUE;
 
-  g_mutex_lock (priv->x_lock);
+  g_mutex_lock (&priv->x_lock);
 
   priv->device = XOpenDisplay (priv->display_name);
   if (priv->device == NULL) {
@@ -423,12 +417,12 @@ gst_gl_window_new (gulong external_gl_context)
   else
     g_debug ("Direct Rendering: no\n");
 
-  g_mutex_unlock (priv->x_lock);
+  g_mutex_unlock (&priv->x_lock);
 
   return window;
 
 failure:
-  g_mutex_unlock (priv->x_lock);
+  g_mutex_unlock (&priv->x_lock);
   g_object_unref (G_OBJECT (window));
   return NULL;
 }
@@ -482,7 +476,7 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
     GstGLWindowPrivate *priv = window->priv;
     XWindowAttributes attr;
 
-    g_mutex_lock (priv->x_lock);
+    g_mutex_lock (&priv->x_lock);
 
     priv->parent = (Window) id;
 
@@ -498,7 +492,7 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
 
     XSync (priv->disp_send, FALSE);
 
-    g_mutex_unlock (priv->x_lock);
+    g_mutex_unlock (&priv->x_lock);
   }
 }
 
@@ -508,12 +502,12 @@ gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
 {
   GstGLWindowPrivate *priv = window->priv;
 
-  g_mutex_lock (priv->x_lock);
+  g_mutex_lock (&priv->x_lock);
 
   priv->draw_cb = callback;
   priv->draw_data = data;
 
-  g_mutex_unlock (priv->x_lock);
+  g_mutex_unlock (&priv->x_lock);
 }
 
 void
@@ -522,12 +516,12 @@ gst_gl_window_set_resize_callback (GstGLWindow * window,
 {
   GstGLWindowPrivate *priv = window->priv;
 
-  g_mutex_lock (priv->x_lock);
+  g_mutex_lock (&priv->x_lock);
 
   priv->resize_cb = callback;
   priv->resize_data = data;
 
-  g_mutex_unlock (priv->x_lock);
+  g_mutex_unlock (&priv->x_lock);
 }
 
 void
@@ -536,12 +530,12 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
 {
   GstGLWindowPrivate *priv = window->priv;
 
-  g_mutex_lock (priv->x_lock);
+  g_mutex_lock (&priv->x_lock);
 
   priv->close_cb = callback;
   priv->close_data = data;
 
-  g_mutex_unlock (priv->x_lock);
+  g_mutex_unlock (&priv->x_lock);
 }
 
 /* Called in the gl thread */
@@ -579,7 +573,7 @@ gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
   if (window) {
     GstGLWindowPrivate *priv = window->priv;
 
-    g_mutex_lock (priv->x_lock);
+    g_mutex_lock (&priv->x_lock);
 
     if (priv->running) {
       XEvent event;
@@ -634,7 +628,7 @@ gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
       XSync (priv->disp_send, FALSE);
     }
 
-    g_mutex_unlock (priv->x_lock);
+    g_mutex_unlock (&priv->x_lock);
   }
 }
 
@@ -646,18 +640,18 @@ gst_gl_window_run_loop (GstGLWindow * window)
 
   g_debug ("begin loop\n");
 
-  g_mutex_lock (priv->x_lock);
+  g_mutex_lock (&priv->x_lock);
 
   while (priv->running) {
     XEvent event;
     XEvent pending_event;
 
-    g_mutex_unlock (priv->x_lock);
+    g_mutex_unlock (&priv->x_lock);
 
     /* XSendEvent (which are called in other threads) are done from another display structure */
     XNextEvent (priv->device, &event);
 
-    g_mutex_lock (priv->x_lock);
+    g_mutex_lock (&priv->x_lock);
 
     // use in generic/cube and other related uses
     priv->allow_extra_expose_events = XPending (priv->device) <= 0;
@@ -700,7 +694,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
             custom_cb (custom_data);
           }
 
-          g_cond_signal (priv->cond_send_message);
+          g_cond_signal (&priv->cond_send_message);
         }
 
         /* User clicked on the cross */
@@ -764,7 +758,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
 
             custom_cb (custom_data);
 
-            g_cond_signal (priv->cond_send_message);
+            g_cond_signal (&priv->cond_send_message);
           }
 
           /* Finally we can destroy opengl ressources (texture/shaders/fbo) */
@@ -831,7 +825,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
 
   }                             // while running
 
-  g_mutex_unlock (priv->x_lock);
+  g_mutex_unlock (&priv->x_lock);
 
   g_debug ("end loop\n");
 }
@@ -844,7 +838,7 @@ gst_gl_window_quit_loop (GstGLWindow * window, GstGLWindowCB callback,
   if (window) {
     GstGLWindowPrivate *priv = window->priv;
 
-    g_mutex_lock (priv->x_lock);
+    g_mutex_lock (&priv->x_lock);
 
     if (priv->running) {
       XEvent event;
@@ -871,7 +865,7 @@ gst_gl_window_quit_loop (GstGLWindow * window, GstGLWindowCB callback,
       XSync (priv->disp_send, FALSE);
     }
 
-    g_mutex_unlock (priv->x_lock);
+    g_mutex_unlock (&priv->x_lock);
   }
 }
 
@@ -883,7 +877,7 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   if (window) {
     GstGLWindowPrivate *priv = window->priv;
 
-    g_mutex_lock (priv->x_lock);
+    g_mutex_lock (&priv->x_lock);
 
     if (priv->running) {
       XEvent event;
@@ -910,9 +904,9 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
       XSync (priv->disp_send, FALSE);
 
       /* block until opengl calls have been executed in the gl thread */
-      g_cond_wait (priv->cond_send_message, priv->x_lock);
+      g_cond_wait (&priv->cond_send_message, &priv->x_lock);
     }
 
-    g_mutex_unlock (priv->x_lock);
+    g_mutex_unlock (&priv->x_lock);
   }
 }

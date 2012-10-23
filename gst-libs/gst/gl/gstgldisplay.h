@@ -85,7 +85,7 @@ struct _GstGLDisplay
   GObject object;
 
   //thread safe
-  GMutex *mutex;
+  GMutex mutex;
 
   //gl context
   GThread *gl_thread;
@@ -94,8 +94,8 @@ struct _GstGLDisplay
   GHashTable *texture_pool;
 
   //conditions
-  GCond *cond_create_context;
-  GCond *cond_destroy_context;
+  GCond cond_create_context;
+  GCond cond_destroy_context;
 
   //generic gl code
   GstGLDisplayThreadFunc generic_callback;

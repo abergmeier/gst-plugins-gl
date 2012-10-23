@@ -56,7 +56,7 @@ struct _GstGLMixer
   GstPad *srcpad;
 
   /* Lock to prevent the state to change while blending */
-  GMutex *state_lock;
+  GMutex state_lock;
   /* Sink pads using Collect Pads from core's base library */
   GstCollectPads *collect;
   /* sinkpads, a GSList of GstGLMixerPads */

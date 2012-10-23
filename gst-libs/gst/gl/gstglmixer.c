@@ -41,7 +41,7 @@
 GST_DEBUG_CATEGORY (gst_gl_mixer_debug);
 
 #define GST_GL_MIXER_GET_STATE_LOCK(mix) \
-  (GST_GL_MIXER(mix)->state_lock)
+  (&GST_GL_MIXER(mix)->state_lock)
 #define GST_GL_MIXER_STATE_LOCK(mix) \
   (g_mutex_lock(GST_GL_MIXER_GET_STATE_LOCK (mix)))
 #define GST_GL_MIXER_STATE_UNLOCK(mix) \
@@ -376,7 +376,7 @@ gst_gl_mixer_init (GstGLMixer * mix, GstGLMixerClass * g_class)
   gst_collect_pads_set_function (mix->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_gl_mixer_collected), mix);
 
-  mix->state_lock = g_mutex_new ();
+  g_mutex_init (&mix->state_lock);
 
   mix->array_buffers = 0;
   mix->display = NULL;
@@ -393,7 +393,7 @@ gst_gl_mixer_finalize (GObject * object)
   GstGLMixer *mix = GST_GL_MIXER (object);
 
   gst_object_unref (mix->collect);
-  g_mutex_free (mix->state_lock);
+  g_mutex_clear (&mix->state_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
