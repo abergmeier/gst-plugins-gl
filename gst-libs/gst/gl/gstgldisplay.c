@@ -2167,11 +2167,11 @@ gst_gl_display_check_framebuffer_status (void)
     case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
       GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
       break;
-
+#ifndef OPENGL_ES2
     case GL_FRAMEBUFFER_UNDEFINED:
       GST_ERROR ("GL_FRAMEBUFFER_UNDEFINED");
       break;
-
+#endif //!OPENGL_ES2
     default:
       GST_ERROR ("General FBO error");
   }
