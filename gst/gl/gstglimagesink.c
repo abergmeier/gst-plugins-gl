@@ -83,8 +83,6 @@
 #include "config.h"
 #endif
 
-#include <gst/interfaces/xoverlay.h>
-
 #include "gstglimagesink.h"
 
 GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
@@ -109,10 +107,6 @@ static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
 
-static void gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface);
-static void gst_glimage_sink_set_window_handle (GstXOverlay * overlay,
-    guintptr id);
-static void gst_glimage_sink_expose (GstXOverlay * overlay);
 static gboolean gst_glimage_sink_interface_supported (GstImplementsInterface *
     iface, GType type);
 static void gst_glimage_sink_implements_init (GstImplementsInterfaceClass *
@@ -168,16 +162,10 @@ gst_glimage_sink_init_interfaces (GType type)
     NULL
   };
 
-  static const GInterfaceInfo xoverlay_info = {
-    (GInterfaceInitFunc) gst_glimage_sink_xoverlay_init,
-    NULL,
-    NULL,
-  };
-
   g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
       &implements_info);
 
-  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
+  gst_glimage_sink_add_display_interface_static(type);
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
       "OpenGL Video Sink");
@@ -607,7 +595,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->par_d = par_d;
 
   if (!glimage_sink->window_id && !glimage_sink->new_window_id)
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
+    gst_glimage_sink_prepare_window_id(glimage_sink);
 
   return TRUE;
 }
@@ -668,53 +656,11 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 }
 
 
-static void
-gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface)
-{
-  iface->set_window_handle = gst_glimage_sink_set_window_handle;
-  iface->expose = gst_glimage_sink_expose;
-}
-
-
-static void
-gst_glimage_sink_set_window_handle (GstXOverlay * overlay, guintptr id)
-{
-  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
-  gulong window_id = (gulong) id;
-
-  g_return_if_fail (GST_IS_GLIMAGE_SINK (overlay));
-
-  GST_DEBUG ("set_xwindow_id %ld", window_id);
-
-  glimage_sink->new_window_id = window_id;
-}
-
-
-static void
-gst_glimage_sink_expose (GstXOverlay * overlay)
-{
-  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
-
-  //redisplay opengl scene
-  if (glimage_sink->display && glimage_sink->window_id) {
-
-    if (glimage_sink->window_id != glimage_sink->new_window_id) {
-      glimage_sink->window_id = glimage_sink->new_window_id;
-      gst_gl_display_set_window_id (glimage_sink->display,
-          glimage_sink->window_id);
-    }
-
-    gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0, 0, 0,
-        glimage_sink->keep_aspect_ratio);
-  }
-}
-
-
 static gboolean
 gst_glimage_sink_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
-  if (type != GST_TYPE_X_OVERLAY)
+  if (gst_glimage_sink_display_interface_supported(iface, type)==FALSE)
     return FALSE;
   return TRUE;
 }

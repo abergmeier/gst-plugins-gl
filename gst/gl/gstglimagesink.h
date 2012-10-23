@@ -82,6 +82,9 @@ struct _GstGLImageSinkClass
 };
 
 GType gst_glimage_sink_get_type(void);
+void gst_glimage_sink_add_display_interface_static(GType type);
+void gst_glimage_sink_prepare_window_id(GstGLImageSink *glimage_sink);
+gboolean gst_glimage_sink_display_interface_supported(GstImplementsInterface * iface, GType type);
 
 #endif
 
