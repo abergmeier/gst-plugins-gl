@@ -66,7 +66,7 @@ struct _GstGLFilter
 
   GstGLShader *default_shader;
 
-  gulong external_gl_context;
+  gst_gl_context_type external_gl_context;
 };
 
 struct _GstGLFilterClass

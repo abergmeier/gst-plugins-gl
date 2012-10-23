@@ -2199,7 +2199,7 @@ gst_gl_display_new (void)
 /* Create an opengl context (one context for one GstGLDisplay) */
 gboolean
 gst_gl_display_create_context (GstGLDisplay * display,
-    gulong external_gl_context)
+    gst_gl_context_type external_gl_context)
 {
   gboolean isAlive = FALSE;
 
@@ -2597,10 +2597,11 @@ gst_gl_display_set_client_data (GstGLDisplay * display, gpointer data)
   gst_gl_display_unlock (display);
 }
 
-gulong
+gst_gl_context_type
 gst_gl_display_get_internal_gl_context (GstGLDisplay * display)
 {
-  gulong external_gl_context = 0;
+  //FIXME: Assigning 0 is incorrect
+  gst_gl_context_type external_gl_context = 0;
   gst_gl_display_lock (display);
   external_gl_context =
       gst_gl_window_get_internal_gl_context (display->gl_window);

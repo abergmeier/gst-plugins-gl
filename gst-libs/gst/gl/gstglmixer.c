@@ -599,7 +599,8 @@ gst_gl_mixer_query (GstPad * pad, GstQuery * query)
 
       if (!res) {
         GstGLDisplay *foreign_display = NULL;
-        gulong foreign_gl_context = 0;
+        //FIXME: Assigning 0 is semantically incorrect
+        gst_gl_context_type foreign_gl_context = 0;
 
         if (mix->display) {
           /* this gl filter is a sink in terms of the gl chain */

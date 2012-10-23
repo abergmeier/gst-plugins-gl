@@ -140,7 +140,7 @@ struct _GstGLDisplay
   gpointer upload_data;
 
   //foreign gl context
-  gulong external_gl_context;
+  gst_gl_context_type external_gl_context;
 
   //filter gen fbo
   GLuint gen_fbo_width;
@@ -246,7 +246,7 @@ GType gst_gl_display_get_type (void);
 GstGLDisplay *gst_gl_display_new (void);
 
 gboolean gst_gl_display_create_context (GstGLDisplay * display,
-    gulong external_gl_context);
+    gst_gl_context_type external_gl_context);
 gboolean gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
     gint gl_width, gint gl_height, gint window_width, gint window_height,
     gboolean keep_aspect_ratio);
@@ -294,7 +294,7 @@ void gst_gl_display_set_client_reshape_callback (GstGLDisplay * display,
 void gst_gl_display_set_client_draw_callback (GstGLDisplay * display, CDCB cb);
 void gst_gl_display_set_client_data (GstGLDisplay * display, gpointer data);
 
-gulong gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
+gst_gl_context_type gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
 void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
 
 /* Must be called inside a lock/unlock on display, or within the glthread */

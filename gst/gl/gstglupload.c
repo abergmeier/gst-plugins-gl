@@ -211,7 +211,8 @@ gst_gl_upload_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_EXTERNAL_OPENGL_CONTEXT:
     {
-      upload->external_gl_context = g_value_get_ulong (value);
+      upload->external_gl_context =
+          (gst_gl_context_type) g_value_get_ulong (value);
       break;
     }
     default:

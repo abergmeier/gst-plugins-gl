@@ -79,9 +79,15 @@ struct _GstGLWindowClass {
 GQuark gst_gl_window_error_quark (void);
 GType gst_gl_window_get_type (void);
 
-GstGLWindow * gst_gl_window_new (guintptr external_gl_context);
+#ifdef OPENGL_ES2
+typedef EGLContext gst_gl_context_type;
+#else
+typedef guintptr gst_gl_context_type;
+#endif
 
-guintptr gst_gl_window_get_internal_gl_context (GstGLWindow *window);
+GstGLWindow * gst_gl_window_new (gst_gl_context_type external_gl_context);
+
+gst_gl_context_type gst_gl_window_get_internal_gl_context (GstGLWindow *window);
 void gst_gl_window_activate_gl_context (GstGLWindow *window, gboolean activate);
 
 void gst_gl_window_set_external_window_id (GstGLWindow *window, guintptr id);

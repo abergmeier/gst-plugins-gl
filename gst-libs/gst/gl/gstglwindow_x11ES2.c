@@ -287,7 +287,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gulong external_gl_context)
+gst_gl_window_new (gst_gl_context_type external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -449,7 +449,7 @@ gst_gl_window_new (gulong external_gl_context)
 
   priv->gl_context =
       eglCreateContext (priv->gl_display, config,
-      (EGLContext) (guint) external_gl_context, context_attrib);
+      external_gl_context, context_attrib);
 
   if (priv->gl_context != EGL_NO_CONTEXT)
     g_debug ("gl context created: %ld\n", (gulong) priv->gl_context);
@@ -483,11 +483,11 @@ gst_gl_window_error_quark (void)
   return g_quark_from_static_string ("gst-gl-window-error");
 }
 
-gulong
+gst_gl_context_type
 gst_gl_window_get_internal_gl_context (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
-  return (gulong) priv->gl_context;
+  return priv->gl_context;
 }
 
 void

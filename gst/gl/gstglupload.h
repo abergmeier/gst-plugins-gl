@@ -54,7 +54,7 @@ struct _GstGLUpload
     gint video_height;
     gint gl_width;
     gint gl_height;
-    gulong external_gl_context;
+    gst_gl_context_type external_gl_context;
 };
 
 struct _GstGLUploadClass
